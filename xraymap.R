@@ -225,7 +225,7 @@ contour=function(DEM, stroke=1) {
 }
 
 
-# Mask overlapping calculation
+# Mask overlap calculation
 overlap=function(DIMX, DIMY, POSX, POSY, dimx, dimy) {
     # Function generated using ChatGPT
     # prompt: "Write a R function that provides the top left corner
@@ -434,14 +434,14 @@ dimx=ncol(figure)
 
 img2=readTIFF("DEM.tif")
 
-POSX=round(DIMX/2-850)
-POSY=round(DIMY/2-350)
+POSX=round(DIMX/2+800)
+POSY=round(DIMY/2+400)
 
 mask=img1*0
 SOLAPE=overlap(DIMX, DIMY, POSX, POSY, dimx, dimy)
 if (!is.null(SOLAPE)) {
     # Call again the same function swapping parameters
-    solape=overlap(dimx, dimy, -POSX, -POSY, DIMX, DIMY)
+    solape=overlap(dimx, dimy, 2-POSX, 2-POSY, DIMX, DIMY)
     mask[SOLAPE[[1]][2]:SOLAPE[[2]][2],
          SOLAPE[[1]][1]:SOLAPE[[2]][1],]=replicate(3,
                                     figure[solape[[1]][2]:solape[[2]][2],
