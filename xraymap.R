@@ -42,6 +42,7 @@ arrayblur=function(img, radius=11) {
 }
 
 
+# Hillshade calculation
 hillshademap=function(DEM, dx=25, dlight=c(0, 2, 3), gamma=1) {
     # hillshademap() inputs DEM data and outputs a hillshade matrix
     #
@@ -87,6 +88,7 @@ hillshademap=function(DEM, dx=25, dlight=c(0, 2, 3), gamma=1) {
 }
 
 
+# Shadow projection calculation
 shadowmap=function(DEM, dx=25, dlight=c(0, 2, 3)) {
     # shadowsmap() inputs DEM data and outputs shadows projection
     #
@@ -148,10 +150,10 @@ shadowmap=function(DEM, dx=25, dlight=c(0, 2, 3)) {
             DELTA=DEM[x, y:DIMX]-LIGHTPATH
             
             # 4 shadow styles:
-            # if (max(DELTA)>0) shadows[x,y]=1  # style='hard': shadow=1 if some elevation protrudes above light path
+            if (max(DELTA)>0) shadows[x,y]=1  # style='hard': shadow=1 if some elevation protrudes above light path
             # shadows[x,y]=shadows[x,y] + length(DELTA[DELTA>0])  # style='width': thickness of protrusion
             # shadows[x,y]=shadows[x,y] + max(0,DELTA[DELTA>0])  # style='max': highest protrusion
-            shadows[x,y]=shadows[x,y] + sum(DELTA[DELTA>0])  # style='mixed': width + height of protrusion
+            # shadows[x,y]=shadows[x,y] + sum(DELTA[DELTA>0])  # style='mixed': width + height of protrusion
         }
     }
     
@@ -186,6 +188,7 @@ shadowmap=function(DEM, dx=25, dlight=c(0, 2, 3)) {
 }
 
 
+# Contours calculation
 contour=function(DEM, stroke=1) {
     # contour() calculates the contours of any colour change
     #
@@ -222,32 +225,45 @@ contour=function(DEM, stroke=1) {
 }
 
 
-# BITMAP DRAWING FUNCTIONS
-
-DrawEllip = function(img, x0, y0, a, b, inc=TRUE, val=1, fill=FALSE, thick=1) {
-    # Dibuja elipse de centro (x0,y0) y radios a y b
-    # Por defecto método no destructivo, con valor=1 y sin relleno
-    # Puede elegirse el grosor si no se rellena
-    # Aquí no redondeamos para tener más precisión en la división
-    if (fill) {
-        indices=which( ((row(img)-x0)/a)^2 + ((col(img)-y0)/b)^2 < 1 )
-    } else {
-        indices=which( ((row(img)-x0)/(a+thick/2))^2 + ((col(img)-y0)/(b+thick/2))^2 <  1 &
-                           ((row(img)-x0)/(a-thick/2))^2 + ((col(img)-y0)/(b-thick/2))^2 >= 1 )
+# Mask overlapping calculation
+overlap=function(DIMX, DIMY, POSX, POSY, dimx, dimy) {
+    # Function generated using ChatGPT
+    # prompt: "Write a R function that provides the top left corner
+    # and bottom right corner of the overlapping between a rectangle
+    # defined by coordinates (1,1) and (DIMX, DIMY) and another rectangle
+    # of dimensions dimx by dimy, whose top left corner is positioned
+    # at coordinates (POSX, POSY)"
+    
+    # Top-left corner of rectangle 1
+    r1_x1=1
+    r1_y1=1
+    # Bottom-right corner of rectangle 1
+    r1_x2=DIMX
+    r1_y2=DIMY
+    
+    # Top-left corner of rectangle 2
+    r2_x1=POSX
+    r2_y1=POSY
+    # Bottom-right corner of rectangle 2
+    r2_x2=POSX + dimx - 1  # -1 added afterwards to work with
+    r2_y2=POSY + dimy - 1  # integer matrix positions
+    
+    # Calculate top-left corner of the overlap
+    overlap_x1=max(r1_x1, r2_x1)
+    overlap_y1=max(r1_y1, r2_y1)
+    
+    # Calculate bottom-right corner of the overlap
+    overlap_x2=min(r1_x2, r2_x2)
+    overlap_y2=min(r1_y2, r2_y2)
+    
+    # Check if there is no overlap
+    if (overlap_x1>overlap_x2 || overlap_y1>overlap_y2) {
+        return(NULL)  # No overlap
     }
-    if (inc) img[indices]=img[indices]+val
-    else img[indices]=val
     
-    return(img)
-}
-
-DrawCircle = function(img, x0, y0, r, inc=TRUE, val=1, fill=FALSE, thick=1) {
-    # Dibuja círculo de centro (x0,y0) y radio r
-    # Por defecto método no destructivo, con valor=1 y sin relleno
-    # Puede elegirse el grosor si no se rellena
-    img=DrawEllip(img, x0, y0, r, r, inc, val, fill, thick)
-    
-    return(img)
+    # Return top-left and bottom-right corners of the overlapping area
+    return(list(top_left=c(overlap_x1, overlap_y1),
+                bottom_right=c(overlap_x2, overlap_y2)))
 }
 
 
@@ -277,7 +293,7 @@ tenerife6=data.matrix(
 tenerife7=data.matrix(
     fread("PNOA_MDT25_REGCAN95_HU28_1102_LID.txt", sep=" ", dec="."))
 
-# Crop sea areas to 0
+# Crop sea areas (-999) to 0
 tenerife1[tenerife1<0]=0
 tenerife2[tenerife2<0]=0
 tenerife3[tenerife3<0]=0
@@ -377,7 +393,6 @@ writeTIFF(DEMslice, paste0("tenerife_", NSLICES, "slices.tif"),
 
 # 5. CALCULATE CONTOURS AND TANAKA HILLSHADE
 
-
 # Contours
 DEMcontour=contour(DEMslice, stroke=3)
 writeTIFF(DEMcontour, paste0("tenerife_contours.tif"),
@@ -398,12 +413,45 @@ writeTIFF(hillshadetanaka, "hillshadetanaka.tif",
 # 6. CALCULATE SHADOWS
 
 shadows=shadowmap(DEM, dx=RESOLUTION, dlight=c(0, 30, 5))
-Gamma=6
-writeTIFF(shadows^Gamma, "shadowshard.tif", bits.per.sample=16, compression="LZW")
+writeTIFF(shadows, "shadowshard.tif", bits.per.sample=16, compression="LZW")
 
 shadows=shadowmap(DEM, dx=RESOLUTION, dlight=c(0, 30, 5))
 Gamma=6
 writeTIFF(shadows^Gamma, "shadowsmixed.tif", bits.per.sample=16, compression="LZW")
+
+
+#################################################
+
+# 7. ANIM
+
+img1=readTIFF("background.tif")
+DIMY=nrow(img1)
+DIMX=ncol(img1)
+
+figure=readPNG("circle.png")
+dimy=nrow(figure)
+dimx=ncol(figure)
+
+img2=readTIFF("DEM.tif")
+
+POSX=DIMX/2-850
+POSY=DIMY/2-350
+
+mask=img1*0
+SOLAPE=overlap(DIMX, DIMY, round(POSX), round(POSY), dimx, dimy)
+if (!is.null(SOLAPE)) {
+    # Call again the same function swapping parameters
+    solape=overlap(dimx, dimy, -round(POSX), -round(POSY), DIMX, DIMY)
+    mask[SOLAPE[[1]][2]:SOLAPE[[2]][2],
+         SOLAPE[[1]][1]:SOLAPE[[2]][1],]=replicate(3,
+                                    figure[solape[[1]][2]:solape[[2]][2],
+                                           solape[[1]][1]:solape[[2]][1]])   
+}
+
+imgout = (1-mask)*img1 + mask*img2  # linear combination
+writePNG(imgout, "imgout.png")
+
+
 
 
 
