@@ -434,14 +434,14 @@ dimx=ncol(figure)
 
 img2=readTIFF("DEM.tif")
 
-POSX=DIMX/2-850
-POSY=DIMY/2-350
+POSX=round(DIMX/2-850)
+POSY=round(DIMY/2-350)
 
 mask=img1*0
-SOLAPE=overlap(DIMX, DIMY, round(POSX), round(POSY), dimx, dimy)
+SOLAPE=overlap(DIMX, DIMY, POSX, POSY, dimx, dimy)
 if (!is.null(SOLAPE)) {
     # Call again the same function swapping parameters
-    solape=overlap(dimx, dimy, -round(POSX), -round(POSY), DIMX, DIMY)
+    solape=overlap(dimx, dimy, -POSX, -POSY, DIMX, DIMY)
     mask[SOLAPE[[1]][2]:SOLAPE[[2]][2],
          SOLAPE[[1]][1]:SOLAPE[[2]][1],]=replicate(3,
                                     figure[solape[[1]][2]:solape[[2]][2],
