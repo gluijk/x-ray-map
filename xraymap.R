@@ -431,25 +431,47 @@ DIMX=ncol(img1)
 figure=readPNG("circle.png")
 dimy=nrow(figure)
 dimx=ncol(figure)
+RADIUS=nrow(figure)/2
 
-img2=readTIFF("DEM.tif")
-
-POSX=round(DIMX/2+800)
-POSY=round(DIMY/2+400)
-
-mask=img1*0
-SOLAPE=overlap(DIMX, DIMY, POSX, POSY, dimx, dimy)
-if (!is.null(SOLAPE)) {
-    # Call again the same function swapping parameters
-    solape=overlap(dimx, dimy, 2-POSX, 2-POSY, DIMX, DIMY)
-    mask[SOLAPE[[1]][2]:SOLAPE[[2]][2],
-         SOLAPE[[1]][1]:SOLAPE[[2]][1],]=replicate(3,
-                                    figure[solape[[1]][2]:solape[[2]][2],
-                                           solape[[1]][1]:solape[[2]][1]])   
+NMAPS=4
+mapas=c('DEM', 'contours', 'colours', 'shadows')
+img2=array(0, c(DIMY, DIMX, 3, NMAPS))
+for (i in 1:NMAPS) {
+    img2[,,,i]=readTIFF(paste0(mapas[i], ".tif"))
 }
 
-imgout = (1-mask)*img1 + mask*img2  # linear combination
-writePNG(imgout, "imgout.png")
+x0=DIMX/2
+y0=DIMY/2
+R=350
+NFRAMES=360
+for (frame in 0:(NFRAMES-1)) {
+    THETA=frame*(2*pi)/NFRAMES
+    imgout=img1
+    for (i in 1:NMAPS) {
+        theta=THETA+(i-1)*pi/2
+        POSX=round(x0+R*cos(theta)-RADIUS)  # last minute rounding
+        POSY=round(y0+R*sin(theta)-RADIUS)
+        
+        mask=img1*0
+        SOLAPE=overlap(DIMX, DIMY, POSX, POSY, dimx, dimy)
+        if (!is.null(SOLAPE)) {
+            # Call again the same function swapping parameters
+            solape=overlap(dimx, dimy, -POSX+2, -POSY+2, DIMX, DIMY)
+            mask[SOLAPE[[1]][2]:SOLAPE[[2]][2],
+                 SOLAPE[[1]][1]:SOLAPE[[2]][1],]=replicate(3,
+                                                           figure[solape[[1]][2]:solape[[2]][2],
+                                                                  solape[[1]][1]:solape[[2]][1]])   
+        }
+        imgout = (1-mask)*imgout + mask*img2[,,,i]  # linear combination    
+    }
+    name=paste0("imgout", ifelse(frame<10,"00",ifelse(frame<100,"0","")),
+                frame, ".png")
+    print(name)
+    writePNG(imgout, name)  # save frame
+}
+
+
+
 
 
 
