@@ -3,7 +3,7 @@
 # https://www.overfitting.net/2024/04/proyeccion-de-sombras-sobre-un-dem-con-r.html
 
 library(data.table)  # fread()
-library(terra)  # read GeoTIFF, plot, reprojection, crop and resample
+library(terra)  # build blur and resample functions
 library(tiff)  # save 16-bit TIFF's
 library(png)  # save 8-bit PNG's
 
