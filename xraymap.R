@@ -1,6 +1,6 @@
-# X-Ray animation from a digital elevation map (DEM)
+# X-Ray animation from a Tenerife DEM
 # www.overfitting.net
-# https://www.overfitting.net/
+# https://www.overfitting.net/2024/10/radiografia-de-tenerife-con-r.html
 
 library(data.table)  # fread()
 library(terra)  # build blur and resample functions
