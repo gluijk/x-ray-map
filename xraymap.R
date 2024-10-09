@@ -424,29 +424,31 @@ writeTIFF(shadows^Gamma, "shadowsmixed.tif", bits.per.sample=16, compression="LZ
 
 # 7. ANIM
 
-img1=readTIFF("background.tif")
+# Read hillshade and lens shape
+img1=readTIFF("background.tif")  # background hillshade
 DIMY=nrow(img1)
 DIMX=ncol(img1)
 
-figure=readPNG("circle.png")
+figure=readPNG("circlelarge.png")  # magnifying lens shape
 dimy=nrow(figure)
 dimx=ncol(figure)
 RADIUS=nrow(figure)/2
 
-NMAPS=4
+# Read maps
 mapas=c('DEM', 'contours', 'colours', 'shadows')
-img2=array(0, c(DIMY, DIMX, 3, NMAPS))
+NMAPS=length(mapas)
+img2=array(0, c(dim(img1), NMAPS))  # each of 4 partial maps
 for (i in 1:NMAPS) {
     img2[,,,i]=readTIFF(paste0(mapas[i], ".tif"))
 }
 
 x0=DIMX/2
 y0=DIMY/2
-R=350
+R=320
 NFRAMES=360
 for (frame in 0:(NFRAMES-1)) {
     THETA=frame*(2*pi)/NFRAMES
-    imgout=img1
+    imgout=img1  # reset to background
     for (i in 1:NMAPS) {
         theta=THETA+(i-1)*pi/2
         POSX=round(x0+R*cos(theta)-RADIUS)  # last minute rounding
@@ -459,10 +461,10 @@ for (frame in 0:(NFRAMES-1)) {
             solape=overlap(dimx, dimy, -POSX+2, -POSY+2, DIMX, DIMY)
             mask[SOLAPE[[1]][2]:SOLAPE[[2]][2],
                  SOLAPE[[1]][1]:SOLAPE[[2]][1],]=replicate(3,
-                                                           figure[solape[[1]][2]:solape[[2]][2],
-                                                                  solape[[1]][1]:solape[[2]][1]])   
+                                       figure[solape[[1]][2]:solape[[2]][2],
+                                              solape[[1]][1]:solape[[2]][1]])   
         }
-        imgout = (1-mask)*imgout + mask*img2[,,,i]  # linear combination    
+        imgout = (1-mask)*imgout + mask*img2[,,,i]  # image masking  
     }
     name=paste0("imgout", ifelse(frame<10,"00",ifelse(frame<100,"0","")),
                 frame, ".png")
