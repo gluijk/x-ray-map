@@ -472,10 +472,7 @@ for (frame in 0:(NFRAMES-1)) {
 }
 
 
-
-
-
-
-
-
+# MP4 Video (MPEG-4 AVC/H.264):
+# ffmpeg -loop 1 -framerate 24 -i imgout%03d.png -i interfrontstrangeclip.wav
+# -t 96.872 -c:v libx264 -crf 20 -pix_fmt yuv420p xraymap.mp4
 
