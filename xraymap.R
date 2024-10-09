@@ -432,27 +432,26 @@ DIMX=ncol(img1)
 figure=readPNG("circlelarge.png")  # magnifying lens shape
 dimy=nrow(figure)
 dimx=ncol(figure)
-RADIUS=nrow(figure)/2
+RADIUSY=dimy/2
+RADIUSX=dimx/2
 
 # Read maps
 mapas=c('DEM', 'contours', 'colours', 'shadows')
 NMAPS=length(mapas)
 img2=array(0, c(dim(img1), NMAPS))  # each of 4 partial maps
-for (i in 1:NMAPS) {
-    img2[,,,i]=readTIFF(paste0(mapas[i], ".tif"))
-}
+for (i in 1:NMAPS) img2[,,,i]=readTIFF(paste0(mapas[i], ".tif"))
 
 x0=DIMX/2
 y0=DIMY/2
 R=320
-NFRAMES=360
+NFRAMES=360  # total number of frames to calculate
 for (frame in 0:(NFRAMES-1)) {
     THETA=frame*(2*pi)/NFRAMES
     imgout=img1  # reset to background
     for (i in 1:NMAPS) {
         theta=THETA+(i-1)*pi/2
-        POSX=round(x0+R*cos(theta)-RADIUS)  # last minute rounding
-        POSY=round(y0+R*sin(theta)-RADIUS)
+        POSX=round(x0+R*cos(theta)-RADIUSX)  # last minute rounding
+        POSY=round(y0+R*sin(theta)-RADIUSY)
         
         mask=img1*0
         SOLAPE=overlap(DIMX, DIMY, POSX, POSY, dimx, dimy)
