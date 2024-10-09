@@ -1,2 +1,2 @@
 # x-ray-map
-X-ray style animation over Tenerife (DEM, contours, coloured and hillshade)
+X-Ray style animation over Tenerife (DEM, contours, coloured and shadows)
