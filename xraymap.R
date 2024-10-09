@@ -1,6 +1,6 @@
-# Calculation of shadows projection from a digital elevation map (DEM)
+# X-Ray animation from a digital elevation map (DEM)
 # www.overfitting.net
-# https://www.overfitting.net/2024/04/proyeccion-de-sombras-sobre-un-dem-con-r.html
+# https://www.overfitting.net/
 
 library(data.table)  # fread()
 library(terra)  # build blur and resample functions
