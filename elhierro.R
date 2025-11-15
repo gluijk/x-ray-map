@@ -286,6 +286,7 @@ hist(v,
                  round(max(v)), "m"))
 abline(v=median(v), col='red', lty='dashed', lwd=2)
 abline(v=mean(v), col='red', lty='dashed', lwd=2)
+rm(v)
 
 writeTIFF(DEM/max(DEM), "dem.tif", bits.per.sample=16, compression='LZW')
 
