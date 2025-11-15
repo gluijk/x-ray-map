@@ -274,7 +274,19 @@ MAXIMO=as.integer(global(hierrocroprs, "max", na.rm=TRUE))
 DEM=as.matrix(hierrocroprs, wide=TRUE)
 DEM[is.na(DEM)]=0
 DEM[DEM<3]=0  # delete some residuals along the coast
-hist(DEM[DEM>0], breaks=800)
+
+v=DEM[DEM>0]
+hist(v,
+     breaks=100, xlim=c(0, MAXIMO),
+     main=paste0("Distr. altitudes El Hierro"),
+     xlab=paste0("min / mediana / media / max = ",
+                 round(min(v)*0), "m / ",
+                 round(median(v)), "m / ",
+                 round(mean(v)), "m / ",
+                 round(max(v)), "m"))
+abline(v=median(v), col='red', lty='dashed', lwd=2)
+abline(v=mean(v), col='red', lty='dashed', lwd=2)
+
 writeTIFF(DEM/max(DEM), "dem.tif", bits.per.sample=16, compression='LZW')
 
 
