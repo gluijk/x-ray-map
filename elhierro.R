@@ -1,4 +1,4 @@
-# Beautiful map of El Hierro
+# Beautiful map of El Hierro (the Canary Islands)
 # www.overfitting.net
 # https://www.overfitting.net/2024/10/radiografia-de-tenerife-con-r.html
 
@@ -224,14 +224,12 @@ shadowmap=function(DEM, dx=25, dlight=c(0, 2, 3)) {
 # 1. PROCESS GEOTIFF DATA AND CONVERT FROM DEGREES TO M
 
 # Read 2m resolution GeoTIFF files
-hierro1=rast("MDT02-WGS84-1105-2-COB2.tif")
-hierro2=rast("MDT02-WGS84-1105-3-COB2.tif")
-hierro3=rast("MDT02-WGS84-1105-4-COB2.tif")
-hierro4=rast("MDT02-WGS84-1108-2-1-COB2.tif")
-
-hierro=mosaic(hierro1, hierro2, hierro3, hierro4, fun='mean')
+hierro=mosaic(rast("MDT02-WGS84-1105-2-COB2.tif"),
+              rast("MDT02-WGS84-1105-3-COB2.tif"),
+              rast("MDT02-WGS84-1105-4-COB2.tif"),
+              rast("MDT02-WGS84-1108-2-1-COB2.tif"),
+              fun='mean')
 hierro
-rm(hierro1, hierro2, hierro3, hierro4)
 plot(hierro)
 
 
@@ -245,7 +243,7 @@ plot(hierro)
 
 # 2. CROP DEM, RESAMPLE TO FULL HD (1920 X 1080) AND CREATE SOLID MAP
 
-# EXTEND a bit and CROP raster to area of interest
+# EXTEND a bit (+2km) and CROP raster to area of interest
 e <- ext(hierro)
 e_new <- ext(e$xmin, e$xmax + 2000, e$ymin, e$ymax)
 hierro <- extend(hierro, e_new)
@@ -266,14 +264,16 @@ hierrocroprs
 plot(hierrocroprs)
 
 RESOLUTION=res(hierrocroprs)[1]
+# Map scale
+print(paste0("5km over the map of width=", DIMX, " pixels correspond to ",
+             round(5000/RESOLUTION), " pixels"))
 MAXIMO=as.integer(global(hierrocroprs, "max", na.rm=TRUE))
-#MINIMO=as.integer(global(hierrocroprs, "min", na.rm=TRUE))
 
 
 # Convert to matrix and save as TIFF
 DEM=as.matrix(hierrocroprs, wide=TRUE)
 DEM[is.na(DEM)]=0
-DEM[DEM<3]=0
+DEM[DEM<3]=0  # delete some residuals along the coast
 hist(DEM[DEM>0], breaks=800)
 writeTIFF(DEM/max(DEM), "dem.tif", bits.per.sample=16, compression='LZW')
 
